@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="myApp" ng-cloak>
+<head>
+    <meta charset="UTF-8">
+    <title>AngularJS - Kanban Chart</title>
+
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- js default do sistema -->
+    <script type="text/javascript" src="js/jquery-1.12.0.min.js"></script>
+    <script type="text/javascript" src="js/angular.min.js"></script>
+    <script type="text/javascript" src="js/jquery.kanbantool.api.js"></script>
+    <script type="text/javascript" src="js/undescorejs-min.js"></script>
+    <script type="text/javascript" src="https://code.highcharts.com/highcharts.js"></script>
+    <script type="text/javascript" src="js/moment.js"></script>
+    <script type="text/javascript" src="js/app.js"></script>
+</head>
+<body ng-controller="appController">
+
+<div ng-if="!carregando" style="margin: 20px 20px 20px 20px">
+
+    <form class="form-inline">
+        <div class="form-group form-group-sm">
+            <label for="teamApm">Time APM: </label>
+            <select ng-if="swimlane.length > 0"
+                    ng-change="changeLane()"
+                    ng-options="lane as lane.name for lane in swimlane"
+                    ng-model="form.swimlane"
+                    style="width: 300px"
+                    class="form-control"
+                    id="teamApm">
+            </select>
+        </div>
+    </form>
+
+    <br/>
+
+    <div ng-if="result.length">
+        <div class="col-md-6">
+            <high-chart options="chartOptions">Placeholder for generic chart</high-chart>
+        </div>
+        <div class="col-md-6" ng-if="blockTasks.length">
+            <p class="bg-warning">Impedimentos</p>
+            <div ng-repeat="block in blockTasks">
+                <div ng-repeat="tasks in block">
+                    <h5 class="text-danger">{{ tasks.block_reason }}</h5>
+                    <small> {{ tasks.author }} - ultima alteração: {{ tasks.updated_at | date: 'dd/MM/yyyy' }}</small>
+                </div>
+            </div>
+        </div>
+
+
+    </div>
+</div>
+</body>
+</html>

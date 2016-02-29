@@ -15,7 +15,7 @@ module.controller('appController',
                 },
                 colors: ['blue', 'red'],
                 xAxis: {
-                    categories: ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta']
+                    categories: ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sabado', 'Domingo']
                 },
                 series: [{
                     name: 'Ideal',
@@ -46,61 +46,61 @@ module.controller('appController',
                         result.id = swimlane.id;
                         result.name = swimlane.name;
                         var tasks = [];
-                        var completeTask = [[], [], [], [], []];
                         var block = [];
-                        angular.forEach(data.tasks, function (task) {
-                            var result = {};
-                            var typeCard = {};
-                            var workflowStage = {};
+                        var completeTask = [[], [], [], [], [], [], []];
+                        if(data.tasks.length > 0) {
+                            angular.forEach(data.tasks, function (task) {
+                                if(task.due_date) {
+                                    var due_date = new Date(task.due_date.split('-'));
+                                    var timestampDueDate = due_date.getTime();
+                                    var now = new Date();
+                                    var result = {};
+                                    var typeCard = {};
+                                    var workflowStage = {};
 
-                            angular.forEach(data.boardSettings.card_types, function (type) {
-                                if (task.card_type_id == type.id) {
-                                    typeCard = type;
+                                    angular.forEach(data.boardSettings.card_types, function (type) {
+                                        if (task.card_type_id == type.id) {
+                                            typeCard = type;
+                                        }
+                                    }, typeCard);
+
+                                    angular.forEach(data.boardSettings.workflow_stages, function (stage) {
+                                        if (task.workflow_stage_id == stage.id) {
+                                            workflowStage = stage;
+                                        }
+                                    }, workflowStage);
+
+                                    result.typeCard = {'id': typeCard.id, 'name': typeCard.name};
+                                    result.workflowStage = {'id': workflowStage.id, 'name': workflowStage.name};
+                                    result.created_at = task.created_at;
+                                    result.updated_at = task.updated_at;
+                                    result.name = task.name;
+
+                                    if ((task.swimlane_id == swimlane.id) && (moment(timestampDueDate).isoWeek() == moment(now.getTime()).isoWeek())) {
+                                        /* tarefas concluidas na semana */
+                                        if (result.workflowStage.name == 'Finalizados da Semana') {
+                                            var date = moment(result.updated_at);
+                                            completeTask[date.isoWeekday() - 1].push(result);
+                                        }
+
+                                        if (result.workflowStage.name != 'Backlog Mês' && result.workflowStage.name != 'Finalizado' && result.typeCard.name == "Normal") {
+                                            tasks.push(result);
+                                        }
+                                    }
+
+                                    var taskBlock = {};
+                                    if ((task.swimlane_id == swimlane.id) && task.block_reason && result.workflowStage.name != 'Finalizado') {
+                                        taskBlock = {
+                                            block_reason: task.block_reason,
+                                            name: task.name,
+                                            updated_at: task.updated_at,
+                                            author: swimlane.name
+                                        };
+                                        block.push(taskBlock);
+                                    }
                                 }
-                            }, typeCard);
-
-                            angular.forEach(data.boardSettings.workflow_stages, function (stage) {
-                                if (task.workflow_stage_id == stage.id) {
-                                    workflowStage = stage;
-                                }
-                            }, workflowStage);
-
-                            result.typeCard = {'id': typeCard.id, 'name': typeCard.name};
-                            result.workflowStage = {'id': workflowStage.id, 'name': workflowStage.name};
-                            result.created_at = task.created_at;
-                            result.updated_at = task.updated_at;
-                            result.name = task.name;
-
-
-                            /* mesma lane, mesma semana[ && (moment(task.due_date).isoWeek() == moment(new Date()).isoWeek())] */
-                            if ((task.swimlane_id == swimlane.id)) {
-                                /* tarefas concluidas na semana */
-                                if (result.workflowStage.name == 'Finalizados da Semana') {
-                                    var date = moment(result.updated_at);
-                                    completeTask[date.isoWeekday() - 1].push(result);
-                                }
-
-                                /* diferente de backlog mes e finalizado, card apenas do tipo normal*/
-                                if (result.workflowStage.name != 'Backlog Mês' && result.workflowStage.name != 'Finalizado' && result.typeCard.name == "Normal") {
-                                    tasks.push(result);
-                                }
-                            }
-
-                            /* tarefas bloqueadas */
-                            var taskBlock = {};
-                            if((task.swimlane_id == swimlane.id) && task.block_reason && result.workflowStage.name != 'Finalizado'){
-                                taskBlock = {
-                                    block_reason: task.block_reason,
-                                    name: task.name,
-                                    updated_at: task.updated_at,
-                                    author: swimlane.name
-                                };
-                                block.push(taskBlock);
-                            }
-
-
-                        }, tasks, completeTask, block);
-
+                            }, tasks, completeTask, block);
+                        }
                         result.completeTask = completeTask;
                         result.tasks = tasks;
                         $scope.swimlane = data.boardSettings.swimlanes;
@@ -108,6 +108,7 @@ module.controller('appController',
                         if(block.length > 0){
                             $scope.blockTasks.push(block);
                         }
+
                     });
 
                     if(privateLane){

@@ -30,6 +30,10 @@ module.controller('appController',
                 }]
             };
 
+            $scope.changeLaneForAllTeam = function () {
+                $scope.form = {};
+                $scope.getInfoBoard(false);
+            };
 
             $scope.changeLane = function () {
                 $scope.getInfoBoard(true);
@@ -51,25 +55,22 @@ module.controller('appController',
                         if(data.tasks.length > 0) {
                             angular.forEach(data.tasks, function (task) {
                                 if(task.due_date) {
-                                    var due_date = new Date(task.due_date.split('-'));
+                                    var due_date = moment(task.due_date, 'YYYY-MM-DD').toDate();
                                     var timestampDueDate = due_date.getTime();
                                     var now = new Date();
                                     var result = {};
                                     var typeCard = {};
                                     var workflowStage = {};
-
                                     angular.forEach(data.boardSettings.card_types, function (type) {
                                         if (task.card_type_id == type.id) {
                                             typeCard = type;
                                         }
                                     }, typeCard);
-
                                     angular.forEach(data.boardSettings.workflow_stages, function (stage) {
                                         if (task.workflow_stage_id == stage.id) {
                                             workflowStage = stage;
                                         }
                                     }, workflowStage);
-
                                     result.typeCard = {'id': typeCard.id, 'name': typeCard.name};
                                     result.workflowStage = {'id': workflowStage.id, 'name': workflowStage.name};
                                     result.created_at = task.created_at;
@@ -87,7 +88,6 @@ module.controller('appController',
                                             tasks.push(result);
                                         }
                                     }
-
                                     var taskBlock = {};
                                     if ((task.swimlane_id == swimlane.id) && task.block_reason && result.workflowStage.name != 'Finalizado') {
                                         taskBlock = {
@@ -116,7 +116,6 @@ module.controller('appController',
                     } else {
                         $scope.goToTeamLane()
                     }
-
                     $scope.carregando = false;
                 });
             };
@@ -129,7 +128,11 @@ module.controller('appController',
                 while (i <= result.tasks.length) {
                     i = i.toFixed(1);
                     y.push(parseFloat(i));
-                    i = parseFloat(i) + parseFloat(avg);
+                    if(avg != 0) {
+                        i = parseFloat(i) + parseFloat(avg);
+                    } else {
+                        break
+                    }
                 }
                 var x = [];
                 var taskFullForDay = 0;
@@ -146,6 +149,7 @@ module.controller('appController',
             };
 
             $scope.goToTeamLane = function () {
+
                 var totalTasks = 0;
                 var x = [null, null, null, null, null];
                 angular.forEach($scope.result, function (result) {
@@ -156,6 +160,7 @@ module.controller('appController',
                         }
                     });
                 });
+
                 number = 0;
                 angular.forEach(x, function (value, index) {
                     if (index <= (moment(new Date()).isoWeekday() - 1)) {
@@ -169,8 +174,13 @@ module.controller('appController',
                 while (i <= totalTasks) {
                     i = i.toFixed(1);
                     y.push(parseFloat(i));
-                    i = parseFloat(i) + parseFloat(avg);
+                    if(avg != 0) {
+                        i = parseFloat(i) + parseFloat(avg);
+                    } else {
+                        break
+                    }
                 }
+                $scope.chartOptions.title.text = 'Burnup semanal - Equipe APM';
                 $scope.chartOptions.series[0].data = y;
                 $scope.chartOptions.series[1].data = x;
             };

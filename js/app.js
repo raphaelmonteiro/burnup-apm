@@ -14,6 +14,11 @@ module.controller('appController',
                     text: 'Burnup semanal - Equipe APM'
                 },
                 colors: ['blue', 'red'],
+                yAxis: {
+                    title: {
+                        text: 'Cards finalizados'
+                    }
+                },
                 xAxis: {
                     categories: ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sabado', 'Domingo']
                 },
@@ -35,7 +40,8 @@ module.controller('appController',
                 $scope.getInfoBoard(false);
             };
 
-            $scope.changeLane = function () {
+            $scope.changeLane = function (lane) {
+                $scope.form.swimlane = lane;
                 $scope.getInfoBoard(true);
             };
 
@@ -77,19 +83,22 @@ module.controller('appController',
                                     result.updated_at = task.updated_at;
                                     result.name = task.name;
 
-                                    if ((task.swimlane_id == swimlane.id) && (moment(timestampDueDate).isoWeek() == moment(now.getTime()).isoWeek())) {
-                                        /* tarefas concluidas na semana */
+                                    if ((task.swimlane_id == swimlane.id) &&
+                                        (moment(timestampDueDate).isoWeek() == moment(now.getTime()).isoWeek())) {
                                         if (result.workflowStage.name == 'Finalizados da Semana') {
                                             var date = moment(result.updated_at);
                                             completeTask[date.isoWeekday() - 1].push(result);
                                         }
 
-                                        if (result.workflowStage.name != 'Backlog Mês' && result.workflowStage.name != 'Finalizado' && result.typeCard.name == "Normal") {
+                                        if (result.workflowStage.name != 'Backlog Mês'
+                                            && result.workflowStage.name != 'Finalizado'
+                                            && result.typeCard.name == "Normal") {
                                             tasks.push(result);
                                         }
                                     }
                                     var taskBlock = {};
-                                    if ((task.swimlane_id == swimlane.id) && task.block_reason && result.workflowStage.name != 'Finalizado') {
+                                    if ((task.swimlane_id == swimlane.id)
+                                        && task.block_reason && result.workflowStage.name != 'Finalizado') {
                                         taskBlock = {
                                             block_reason: task.block_reason,
                                             name: task.name,
@@ -149,7 +158,6 @@ module.controller('appController',
             };
 
             $scope.goToTeamLane = function () {
-
                 var totalTasks = 0;
                 var x = [null, null, null, null, null];
                 angular.forEach($scope.result, function (result) {
@@ -160,7 +168,6 @@ module.controller('appController',
                         }
                     });
                 });
-
                 number = 0;
                 angular.forEach(x, function (value, index) {
                     if (index <= (moment(new Date()).isoWeekday() - 1)) {

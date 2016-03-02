@@ -1,68 +1,63 @@
 <!DOCTYPE html>
 <html lang="en" ng-app="myApp" ng-cloak>
-<head>
-    <meta charset="UTF-8">
-    <title>Ikki Chart Burnup APM</title>
-    <link href="css/bootstrap.min.css" rel="stylesheet">
-    <link href="css/default.css" rel="stylesheet">
-    <script type="text/javascript" src="js/jquery-1.12.0.min.js"></script>
-    <script type="text/javascript" src="js/angular.min.js"></script>
-    <script type="text/javascript" src="js/jquery.kanbantool.api.js"></script>
-    <script type="text/javascript" src="js/undescorejs-min.js"></script>
-    <script type="text/javascript" src="js/highcharts.js"></script>
-    <script type="text/javascript" src="js/moment.js"></script>
-    <script type="text/javascript" src="js/app.js"></script>
-</head>
-<body ng-controller="appController">
-
-<nav class="navbar navbar-default" ng-if="!carregando">
-    <div class="container-fluid">
-        <div class="navbar-header">
-            <a class="navbar-brand" href="#">Ikki</a>
-        </div>
-        <form class="navbar-form navbar-left">
-            <div class="form-group">
-                <select ng-if="swimlane.length > 0"
-                        ng-change="changeLane()"
-                        ng-options="lane as lane.name for lane in swimlane"
-                        ng-model="form.swimlane"
-                        style="width: 300px"
-                        class="form-control">
-                </select>
+    <head>
+        <meta charset="UTF-8">
+        <title>Ikki Chart Burnup APM</title>
+        <link href="css/bootstrap.min.css" rel="stylesheet">
+        <link href="css/default.css" rel="stylesheet">
+        <script type="text/javascript" src="js/jquery-1.12.0.min.js"></script>
+        <script type="text/javascript" src="js/angular.min.js"></script>
+        <script type="text/javascript" src="js/jquery.kanbantool.api.js"></script>
+        <script type="text/javascript" src="js/undescorejs-min.js"></script>
+        <script type="text/javascript" src="js/highcharts.js"></script>
+        <script type="text/javascript" src="js/moment.js"></script>
+        <script type="text/javascript" src="js/app.js"></script>
+    </head>
+    <body ng-controller="appController">
+        <nav class="navbar navbar-default" ng-if="!carregando">
+            <div class="container-fluid">
+                <div class="navbar-header">
+                    <a class="navbar-brand" href="#">Ikki</a>
+                </div>
+                <form class="navbar-form navbar-left">
+                    <div class="form-group form-inline"  ng-repeat="lane in swimlane" ng-if="swimlane.length > 0" >
+                        <button  ng-click="changeLane(lane)" class="btn btn-default button-swimlane"
+                        ng-class="{'btn-info active': form.swimlane.id == lane.id}">{{ lane.name }}</button>
+                    </div>
+                    <button type="submit" ng-click="changeLaneForAllTeam()" class="btn btn-default"
+                            ng-class="{'btn-info active': !form.swimlane}">Equipe APM</button>
+                </form>
             </div>
-            <button type="submit" ng-click="changeLaneForAllTeam()" class="btn btn-default">Equipe APM</button>
-        </form>
-    </div>
-</nav>
-<div ng-if="!carregando" style="margin: 20px 20px 20px 20px">
-    <div ng-if="result.length">
-        <div class="col-md-6">
-            <high-chart options="chartOptions">Placeholder for generic chart</high-chart>
-        </div>
-        <div class="col-md-6">
-            <div class="panel panel-warning">
-                <div class="panel-heading"><h3 class="panel-title">Impedimentos</h3></div>
-                <div class="panel-body">
-                    <div ng-repeat="block in blockTasks" ng-if="blockTasks.length">
-                        <div ng-repeat="tasks in block">
-                            <h5 class="text-danger">{{ tasks.block_reason }}</h5>
-                            <small> {{ tasks.author }} - ultima alteração: {{ tasks.updated_at | date: 'dd/MM/yyyy' }}</small>
-                            <hr>
+        </nav>
+        <div ng-if="!carregando" style="margin: 20px 20px 20px 20px">
+            <div ng-if="result.length">
+                <div class="col-md-6">
+                    <high-chart options="chartOptions">Placeholder for generic chart</high-chart>
+                </div>
+                <div class="col-md-6">
+                    <div class="panel panel-warning">
+                        <div class="panel-heading"><h3 class="panel-title">Impedimentos</h3></div>
+                        <div class="panel-body">
+                            <div ng-repeat="block in blockTasks" ng-if="blockTasks.length">
+                                <div ng-repeat="tasks in block">
+                                    <h5 class="text-danger">{{ tasks.block_reason }}</h5>
+                                    <small> {{ tasks.author }} - ultima alteração: {{ tasks.updated_at | date: 'dd/MM/yyyy' }}</small>
+                                    <hr>
+                                </div>
+                            </div>
+                            <div ng-if="!blockTasks.length">
+                                <small>Sem impedimentos.</small>
+                            </div>
                         </div>
                     </div>
-                    <div ng-if="!blockTasks.length">
-                        <small>Sem impedimentos.</small>
-                    </div>
                 </div>
+
+
             </div>
         </div>
-
-
-    </div>
-</div>
-<div ng-if="carregando" class="centro">
-    Carregando.... calma!
-    <img src="img/loading.gif">
-</div>
-</body>
+        <div ng-if="carregando" class="centro">
+            Carregando.... calma!
+            <img src="img/loading.gif">
+        </div>
+    </body>
 </html>

@@ -11,7 +11,37 @@ module.controller('appController',
             $scope.repair = [];
             $scope.stages = [];
 
+            $scope.chart = {
+                width: 400
+            };
+
+            $scope.sizeOfThings = function (){
+                var windowWidth = window.innerWidth;
+                if((windowWidth-50)/2 < 400){
+                    $scope.chart.width = windowWidth-50;
+                } else {
+                    $scope.chart.width = (windowWidth-50)/2;
+                }
+            };
+            $scope.sizeOfThings();
+
+            window.addEventListener('resize', function(){
+                $scope.sizeOfThings();
+            });
+
+            $scope.tableExport = function(){
+                var dateExport = moment().format('YYYY-MM-DD');
+                $("#yourHtmTable").table2excel({
+                    exclude: ".excludeThisClass",
+                    name: "Worksheet Name",
+                    filename: "burnupApm-"+dateExport
+                });
+            };
+
             $scope.chartOptions = {
+                chart: {
+                    width: $scope.chart.width
+                },
                 title: {
                     text: 'Burnup semanal - Equipe APM'
                 },

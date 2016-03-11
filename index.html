@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en" ng-app="myApp" ng-cloak>
 <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta charset="UTF-8">
     <title>Ikki Chart Burnup APM</title>
     <link href="css/bootstrap.min.css" rel="stylesheet">
@@ -49,11 +50,11 @@
             <div class="panel panel-primary">
                 <div class="panel-heading"><h3 class="panel-title">Em andamento</h3></div>
                 <div class="panel-body">
-                    Corrigidos: <span class="label label-info marginRight15">{{ repair.length }}</span>
-                    Backlog: <span class="label label-default marginRight15">{{ stages[0].count }}</span>
-                    Em Progresso: <span class="label label-default marginRight15">{{ stages[1].count }}</span>
-                    Aguardando revisão: <span class="label label-default marginRight15">{{ stages[2].count }}</span>
-                    Revisão: <span class="label label-default">{{ stages[3].count }}</span>
+                    <div class="floatLeft">Corrigidos: <span class="label label-info marginRight15">{{ repair.length }}</span></div>
+                    <div class="floatLeft">Backlog: <span class="label label-default marginRight15">{{ stages[0].count }}</span></div>
+                    <div class="floatLeft">Em Progresso: <span class="label label-default marginRight15">{{ stages[1].count }}</span></div>
+                    <div class="floatLeft">Aguardando revisão: <span class="label label-default marginRight15">{{ stages[2].count }}</span></div>
+                    <div class="floatLeft">Revisão: <span class="label label-default">{{ stages[3].count }}</span></div>
                 </div>
             </div>
             <div class="panel panel-warning">

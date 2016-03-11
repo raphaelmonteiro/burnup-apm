@@ -1,10 +1,19 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" ng-app="myApp" >
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <title>Teste - ADD SUBTASK</title>
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <link href="css/default.css" rel="stylesheet">
+    <script type="text/javascript" src="js/jquery-1.12.0.min.js"></script>
+    <script type="text/javascript" src="js/angular.min.js"></script>
+    <script type="text/javascript" src="js/jquery.kanbantool.api.js"></script>
+    <script type="text/javascript" src="js/undescorejs-min.js"></script>
+    <script type="text/javascript" src="js/highcharts.js"></script>
+    <script type="text/javascript" src="js/moment.js"></script>
+    <script type="text/javascript" src="js/app.js"></script>
 </head>
-<body>
-
+<body ng-controller="appController">
+    <input class="btn btn-primary" type="submit"  ng-click="addSubtastk()" value="add subtasks"/>
 </body>
 </html>

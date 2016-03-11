@@ -1,13 +1,15 @@
 var module = angular.module('myApp', []);
 
 module.controller('appController',
-    ['$scope', 'getKanbanData',
-        function ($scope, getKanbanData) {
+    ['$scope', 'Api', 'getKanbanData',
+        function ($scope, ApiKanban, getKanbanData) {
             $scope.carregando = true;
             $scope.swimlane = [];
             $scope.form = {};
             $scope.result = [];
             $scope.blockTasks = [];
+            $scope.repair = [];
+            $scope.stages = [];
 
             $scope.chartOptions = {
                 title: {
@@ -45,11 +47,64 @@ module.controller('appController',
                 $scope.getInfoBoard(true);
             };
 
+            $scope.addSubtastk = function () {
+                var analise = [
+                    {"subtask[name]": "Webrequest", 'order': 1},
+                    {"subtask[name]": "Errors", 'order': 2},
+                    {"subtask[name]": "Exceptions", 'order': 3},
+                    {"subtask[name]": "Client Errors", 'order': 4},
+                    {"subtask[name]": "Database", 'order': 5},
+                    {"subtask[name]": "Total Memory", 'order': 6},
+                    {"subtask[name]": "Incidents", 'order': 7},
+                    {"subtask[name]": "Transaction Flow", 'order': 8},
+                    {"subtask[name]": "Runtime Suspensions", 'order': 9}
+                ];
+
+                getKanbanData().then(function (data) {
+                    console.log(data);
+                    angular.forEach(data.tasks, function (task) {
+                        var typeCard = {};
+                        var workflowStage = {};
+                        angular.forEach(data.boardSettings.card_types, function (type) {
+                            if (task.card_type_id == type.id) {
+                                typeCard = type;
+                            }
+                        }, typeCard);
+                        angular.forEach(data.boardSettings.workflow_stages, function (stage) {
+                            if (task.workflow_stage_id == stage.id) {
+                                workflowStage = stage;
+                            }
+                        }, workflowStage);
+
+                        if (typeCard.name == "Normal" &&
+                            (workflowStage.name != 'Finalizados da Semana' && workflowStage.name != 'Finalizado')) {
+                            angular.forEach(analise, function (item) {
+                                ApiKanban.createTaskSubtask(task.board_id, task.id, item, function (data) {
+                                    console.log(data);
+                                });
+                            });
+                        }
+                    });
+                });
+            };
+
+            $scope.colunmBoards = function (workflowStages) {
+                $scope.stages = [];
+                angular.forEach(workflowStages, function (stage) {
+                    if (stage.name && (stage.name != 'Backlog Mês' && stage.name != 'Finalizado')) {
+                        stage.count = 0;
+                        $scope.stages.push(stage);
+                    }
+                })
+            };
+
             $scope.getInfoBoard = function (privateLane) {
                 $scope.carregando = true;
                 $scope.result = [];
                 $scope.blockTasks = [];
+                $scope.repair = [];
                 getKanbanData().then(function (data) {
+                    $scope.colunmBoards(data.boardSettings.workflow_stages);
                     var swimlanes = $scope.form.swimlane ? [$scope.form.swimlane] : data.boardSettings.swimlanes;
                     angular.forEach(swimlanes, function (swimlane) {
                         var result = {};
@@ -58,9 +113,9 @@ module.controller('appController',
                         var tasks = [];
                         var block = [];
                         var completeTask = [[], [], [], [], [], [], []];
-                        if(data.tasks.length > 0) {
+                        if (data.tasks.length > 0) {
                             angular.forEach(data.tasks, function (task) {
-                                if(task.due_date) {
+                                if (task.due_date) {
                                     var due_date = moment(task.due_date, 'YYYY-MM-DD').toDate();
                                     var timestampDueDate = due_date.getTime();
                                     var now = new Date();
@@ -72,30 +127,40 @@ module.controller('appController',
                                             typeCard = type;
                                         }
                                     }, typeCard);
+
                                     angular.forEach(data.boardSettings.workflow_stages, function (stage) {
                                         if (task.workflow_stage_id == stage.id) {
                                             workflowStage = stage;
                                         }
                                     }, workflowStage);
+
+                                    result.swimlane = {'name': swimlane.name, 'id': swimlane.id};
                                     result.typeCard = {'id': typeCard.id, 'name': typeCard.name};
                                     result.workflowStage = {'id': workflowStage.id, 'name': workflowStage.name};
                                     result.created_at = task.created_at;
                                     result.updated_at = task.updated_at;
                                     result.name = task.name;
 
-                                    if ((task.swimlane_id == swimlane.id) &&
-                                        (moment(timestampDueDate).isoWeek() == moment(now.getTime()).isoWeek())) {
+                                    if ((task.swimlane_id == swimlane.id) && (moment(timestampDueDate).isoWeek() == moment(now.getTime()).isoWeek()) &&
+                                        (result.typeCard.name == "Normal" || result.typeCard.name == "Corrigir" || result.typeCard.name == "Impedimento")) {
+
+                                        $scope.stagesCount(result);
+
                                         if (result.workflowStage.name == 'Finalizados da Semana') {
                                             var date = moment(result.updated_at);
                                             completeTask[date.isoWeekday() - 1].push(result);
                                         }
 
                                         if (result.workflowStage.name != 'Backlog Mês'
-                                            && result.workflowStage.name != 'Finalizado'
-                                            && result.typeCard.name == "Normal") {
+                                            && result.workflowStage.name != 'Finalizado') {
                                             tasks.push(result);
                                         }
+
+                                        if (result.typeCard.name == "Corrigir") {
+                                            $scope.repair.push(result);
+                                        }
                                     }
+
                                     var taskBlock = {};
                                     if ((task.swimlane_id == swimlane.id)
                                         && task.block_reason && result.workflowStage.name != 'Finalizado') {
@@ -114,13 +179,18 @@ module.controller('appController',
                         result.tasks = tasks;
                         $scope.swimlane = data.boardSettings.swimlanes;
                         $scope.result.push(result);
-                        if(block.length > 0){
-                            $scope.blockTasks.push(block);
+                        if (block.length > 0) {
+
+                            angular.forEach(block, function (item) {
+                                $scope.blockTasks.push(item);
+                            });
+
+
                         }
 
                     });
 
-                    if(privateLane){
+                    if (privateLane) {
                         $scope.goToPrivateLane();
                     } else {
                         $scope.goToTeamLane()
@@ -137,7 +207,7 @@ module.controller('appController',
                 while (i <= result.tasks.length) {
                     i = i.toFixed(1);
                     y.push(parseFloat(i));
-                    if(avg != 0) {
+                    if (avg != 0) {
                         i = parseFloat(i) + parseFloat(avg);
                     } else {
                         break
@@ -181,7 +251,7 @@ module.controller('appController',
                 while (i <= totalTasks) {
                     i = i.toFixed(1);
                     y.push(parseFloat(i));
-                    if(avg != 0) {
+                    if (avg != 0) {
                         i = parseFloat(i) + parseFloat(avg);
                     } else {
                         break
@@ -190,6 +260,15 @@ module.controller('appController',
                 $scope.chartOptions.title.text = 'Burnup semanal - Equipe APM';
                 $scope.chartOptions.series[0].data = y;
                 $scope.chartOptions.series[1].data = x;
+            };
+
+
+            $scope.stagesCount = function (task) {
+                angular.forEach($scope.stages, function (stage, index) {
+                    if (stage.id == task.workflowStage.id) {
+                        $scope.stages[index].count = $scope.stages[index].count + 1;
+                    }
+                })
             };
 
             $scope.getInfoBoard(false);

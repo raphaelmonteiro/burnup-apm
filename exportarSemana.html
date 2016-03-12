@@ -48,8 +48,8 @@
         <tbody>
         <tr ng-repeat="data in result">
             <td>{{ data.name }}</td>
-            <td>{{ data.tasks.length ? data.tasks.length : data.tasks   }}</td>
-            <td>{{ data.completeTask[4].length ? data.completeTask[4].length : data.completeTask[4] }}</td>
+            <td>{{ data.totalTasks }}</td>
+            <td>{{ data.totalConcluido }}</td>
             <td>{{ data.repair }}</td>
             <td>{{ data.block }}</td>
             <td>{{ data.completeTask[0].length ? data.completeTask[0].length : (data.completeTask[0] > 0 ? data.completeTask[0] : 0)}}</td>

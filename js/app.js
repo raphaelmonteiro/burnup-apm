@@ -210,7 +210,11 @@ module.controller('appController',
                         result.tasks = tasks;
                         result.repair = repair.length;
                         result.block = block.length;
-                        $scope.repair.push(repair);
+                        if(repair.length > 0){
+                            angular.forEach(repair, function (item) {
+                                $scope.repair.push(item);
+                            });
+                        }
                         $scope.swimlane = data.boardSettings.swimlanes;
                         $scope.result.push(result);
                         if (block.length > 0) {
@@ -230,8 +234,8 @@ module.controller('appController',
                         $scope.goToPrivateLane();
                     } else {
                         $scope.goToTeamLane();
+                        $scope.exportData();
                     }
-                    $scope.carregando = false;
                 });
             };
 
@@ -260,6 +264,7 @@ module.controller('appController',
                 $scope.chartOptions.title.text = 'Burnup semanal - ' + result.name;
                 $scope.chartOptions.series[0].data = y;
                 $scope.chartOptions.series[1].data = x;
+                $scope.carregando = false;
             };
 
             $scope.goToTeamLane = function () {
@@ -296,27 +301,32 @@ module.controller('appController',
                 $scope.chartOptions.title.text = 'Burnup semanal - Equipe APM';
                 $scope.chartOptions.series[0].data = y;
                 $scope.chartOptions.series[1].data = x;
+                $scope.carregando = false;
             };
 
             $scope.exportData = function () {
                 /*tratando dados individuais.*/
                 angular.forEach($scope.result, function (result, index1) {
                     var totalConcluido = 0;
+                    $scope.result[index1].taskComplete = [];
                     angular.forEach(result.completeTask, function (task, index2) {
-                        $scope.result[index1].completeTask[index2] = task.length;
+                        $scope.result[index1].taskComplete[index2] = task.length;
                         totalConcluido = totalConcluido + task.length;
                     });
-                    $scope.result[index1].tasks = result.tasks.length;
+                    $scope.result[index1].totalTasks = result.tasks.length;
                     $scope.result[index1].totalConcluido = totalConcluido;
                 });
 
+                /*TIME*/
                 var totalTasks = 0;
+                var totalTasksTeamConcluido = 0;
                 var x = [null, null, null, null, null];
                 angular.forEach($scope.result, function (result) {
-                    totalTasks = totalTasks + result.tasks;
+                    totalTasks = totalTasks + result.tasks.length;
                     angular.forEach(result.completeTask, function (tasksForDay, index) {
                         if (index <= (moment(new Date()).isoWeekday() - 1)) {
-                            x[index] = x[index] + tasksForDay;
+                            x[index] = x[index] + tasksForDay.length;
+                            totalTasksTeamConcluido = totalTasksTeamConcluido + tasksForDay.length;
                         }
                     });
                 });
@@ -332,17 +342,14 @@ module.controller('appController',
                     }
                 });
 
-                var repair = 0;
-                angular.forEach($scope.repair, function (value, index) {
-                    repair = repair + value.length;
-                });
-
+                
                 var result = {};
-                result.repair = repair;
+                result.repair = $scope.repair.length;
                 result.block = $scope.blockTasks.length;
                 result.completeTask = x;
                 result.name = 'Time APM';
-                result.tasks = totalTasks;
+                result.totalTasks = totalTasks;
+                result.totalConcluido = totalTasksTeamConcluido;
                 $scope.result.unshift(result);
             };
 

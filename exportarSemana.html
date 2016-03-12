@@ -18,72 +18,54 @@
 <nav class="navbar navbar-default" role="navigation" ng-if="!carregando">
     <div class="container-fluid">
         <div class="navbar-header">
-            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
-                <span class="sr-only">Toggle navigation</span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-            </button>
-            <a class="navbar-brand" href="#">Ikki</a>
+            <a class="navbar-brand" href="index.html">Ikki</a>
         </div>
-        <div class="navbar-collapse navbar-left collapse">
+        <div class="navbar-left">
             <ul class="nav navbar-nav">
-                <li ng-class="{'active': !form.swimlane}">
-                    <a href="#" type="submit" ng-click="changeLaneForAllTeam()">Equipe APM</a>
-                </li>
-                <li ng-repeat="lane in swimlane" ng-if="swimlane.length > 0"
-                    ng-class="{'active': form.swimlane.id == lane.id}">
-                    <a href="#" ng-click="changeLane(lane)">{{ lane.name }}</a>
+                <li class="active">
+                    <a href="#">Equipe APM</a>
                 </li>
             </ul>
         </div>
     </div>
 </nav>
-<div style="margin: 20px 20px 20px 20px">
-    <table id="yourHtmTable" class="table table-striped">
+<div ng-if="!carregando" style="margin: 20px 20px 20px 20px">
+    <table id="dataXls" class="table table-striped">
         <thead>
-        <tr class='warning'>
-            <th>Country</th>
-            <th>Population</th>
-            <th>Date</th>
-            <th>%ge</th>
+        <tr>
+            <th>#</th>
+            <th>Cards da semana</th>
+            <th>Cards concluidos na semana</th>
+            <th>Cards corrigidos</th>
+            <th>Cards em impedimento</th>
+            <th>Segunda</th>
+            <th>Terça</th>
+            <th>Quarta</th>
+            <th>Quinta</th>
+            <th>Sexta</th>
         </tr>
         </thead>
         <tbody>
-        <tr>
-            <td>Chinna</td>
-            <td>1,363,480,000</td>
-            <td>March 24, 2014</td>
-            <td>19.1</td>
-        </tr>
-        <tr>
-            <td>India</td>
-            <td>1,241,900,000</td>
-            <td>March 24, 2014</td>
-            <td>17.4</td>
-        </tr>
-        <tr>
-            <td>United States</td>
-            <td>317,746,000</td>
-            <td>March 24, 2014</td>
-            <td>4.44</td>
-        </tr>
-        <tr>
-            <td>Indonesia</td>
-            <td>249,866,000</td>
-            <td>July 1, 2013</td>
-            <td>3.49</td>
-        </tr>
-        <tr>
-            <td>Brazil</td>
-            <td>201,032,714</td>
-            <td>July 1, 2013</td>
-            <td>2.81</td>
+        <tr ng-repeat="data in result">
+            <td>{{ data.name }}</td>
+            <td>{{ data.tasks.length ? data.tasks.length : data.tasks   }}</td>
+            <td>{{ data.completeTask[4].length ? data.completeTask[4].length : data.completeTask[4] }}</td>
+            <td>{{ data.repair }}</td>
+            <td>{{ data.block }}</td>
+            <td>{{ data.completeTask[0].length ? data.completeTask[0].length : (data.completeTask[0] > 0 ? data.completeTask[0] : 0)}}</td>
+            <td>{{ data.completeTask[1].length ? data.completeTask[1].length : (data.completeTask[1] > 0 ? data.completeTask[1] : 0) }}</td>
+            <td>{{ data.completeTask[2].length ? data.completeTask[2].length : (data.completeTask[2] > 0 ? data.completeTask[2] : 0) }}</td>
+            <td>{{ data.completeTask[3].length ? data.completeTask[3].length : (data.completeTask[3] > 0 ? data.completeTask[3] : 0) }}</td>
+            <td>{{ data.completeTask[4].length ? data.completeTask[4].length : (data.completeTask[4] > 0 ? data.completeTask[4] : 0) }}</td>
         </tr>
         </tbody>
     </table>
-    <button ng-click="tableExport()">XLS</button>
+    <button type="button" class="btn btn-success" ng-click="tableExport()">Exportar</button>
 
+</div>
+<div ng-if="carregando" class="centro">
+    Carregando.... calma!
+    <img src="img/loading.gif">
 </div>
 </body>
 </html>

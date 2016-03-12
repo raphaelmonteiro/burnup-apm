@@ -10,6 +10,7 @@ module.controller('appController',
             $scope.blockTasks = [];
             $scope.repair = [];
             $scope.stages = [];
+            $scope.data = [];
 
             $scope.chart = {
                 width: 400
@@ -31,7 +32,7 @@ module.controller('appController',
 
             $scope.tableExport = function(){
                 var dateExport = moment().format('YYYY-MM-DD');
-                $("#yourHtmTable").table2excel({
+                $("#dataXls").table2excel({
                     exclude: ".excludeThisClass",
                     name: "Worksheet Name",
                     filename: "burnupApm-"+dateExport
@@ -91,7 +92,6 @@ module.controller('appController',
                 ];
 
                 getKanbanData().then(function (data) {
-                    console.log(data);
                     angular.forEach(data.tasks, function (task) {
                         var typeCard = {};
                         var workflowStage = {};
@@ -142,7 +142,8 @@ module.controller('appController',
                         result.name = swimlane.name;
                         var tasks = [];
                         var block = [];
-                        var completeTask = [[], [], [], [], [], [], []];
+                        var repair = [];
+                        var completeTask = [[], [], [], [], [],[],[]];
                         if (data.tasks.length > 0) {
                             angular.forEach(data.tasks, function (task) {
                                 if (task.due_date) {
@@ -187,7 +188,7 @@ module.controller('appController',
                                         }
 
                                         if (result.typeCard.name == "Corrigir") {
-                                            $scope.repair.push(result);
+                                            repair.push(result);
                                         }
                                     }
 
@@ -203,27 +204,32 @@ module.controller('appController',
                                         block.push(taskBlock);
                                     }
                                 }
-                            }, tasks, completeTask, block);
+                            }, tasks, completeTask, block, repair);
                         }
                         result.completeTask = completeTask;
                         result.tasks = tasks;
+                        result.repair = repair.length;
+                        result.block = block.length;
+                        $scope.repair.push(repair);
                         $scope.swimlane = data.boardSettings.swimlanes;
                         $scope.result.push(result);
                         if (block.length > 0) {
-
                             angular.forEach(block, function (item) {
                                 $scope.blockTasks.push(item);
                             });
-
-
                         }
-
+                        var totalComplete = 0;
+                        angular.forEach(result.completeTask, function (tasksForDay, index) {
+                            if (index <= (moment(new Date()).isoWeekday() - 1)) {
+                                totalComplete = totalComplete + tasksForDay.length;
+                            }
+                        });
                     });
 
                     if (privateLane) {
                         $scope.goToPrivateLane();
                     } else {
-                        $scope.goToTeamLane()
+                        $scope.goToTeamLane();
                     }
                     $scope.carregando = false;
                 });
@@ -254,12 +260,11 @@ module.controller('appController',
                 $scope.chartOptions.title.text = 'Burnup semanal - ' + result.name;
                 $scope.chartOptions.series[0].data = y;
                 $scope.chartOptions.series[1].data = x;
-
             };
 
             $scope.goToTeamLane = function () {
                 var totalTasks = 0;
-                var x = [null, null, null, null, null];
+                var x = [null, null, null, null, null, null, null];
                 angular.forEach($scope.result, function (result) {
                     totalTasks = totalTasks + result.tasks.length;
                     angular.forEach(result.completeTask, function (tasksForDay, index) {
@@ -268,7 +273,7 @@ module.controller('appController',
                         }
                     });
                 });
-                number = 0;
+                var number = 0;
                 angular.forEach(x, function (value, index) {
                     if (index <= (moment(new Date()).isoWeekday() - 1)) {
                         number = number + value;
@@ -287,11 +292,59 @@ module.controller('appController',
                         break
                     }
                 }
+
                 $scope.chartOptions.title.text = 'Burnup semanal - Equipe APM';
                 $scope.chartOptions.series[0].data = y;
                 $scope.chartOptions.series[1].data = x;
             };
 
+            $scope.exportData = function () {
+                /*tratando dados individuais.*/
+                angular.forEach($scope.result, function (result, index1) {
+                    var totalConcluido = 0;
+                    angular.forEach(result.completeTask, function (task, index2) {
+                        $scope.result[index1].completeTask[index2] = task.length;
+                        totalConcluido = totalConcluido + task.length;
+                    });
+                    $scope.result[index1].tasks = result.tasks.length;
+                    $scope.result[index1].totalConcluido = totalConcluido;
+                });
+
+                var totalTasks = 0;
+                var x = [null, null, null, null, null];
+                angular.forEach($scope.result, function (result) {
+                    totalTasks = totalTasks + result.tasks;
+                    angular.forEach(result.completeTask, function (tasksForDay, index) {
+                        if (index <= (moment(new Date()).isoWeekday() - 1)) {
+                            x[index] = x[index] + tasksForDay;
+                        }
+                    });
+                });
+
+                var number = 0;
+                var old = 0;
+                angular.forEach(x, function (value, index) {
+                    if (index <= (moment(new Date()).isoWeekday() - 1)) {
+                        number = number + value;
+                        old = number - old;
+                        x[index] = old;
+                        old = number;
+                    }
+                });
+
+                var repair = 0;
+                angular.forEach($scope.repair, function (value, index) {
+                    repair = repair + value.length;
+                });
+
+                var result = {};
+                result.repair = repair;
+                result.block = $scope.blockTasks.length;
+                result.completeTask = x;
+                result.name = 'Time APM';
+                result.tasks = totalTasks;
+                $scope.result.unshift(result);
+            };
 
             $scope.stagesCount = function (task) {
                 angular.forEach($scope.stages, function (stage, index) {
@@ -302,7 +355,9 @@ module.controller('appController',
             };
 
             $scope.getInfoBoard(false);
-        }]);
+        }
+    ]
+);
 
 
 module.factory('Api', function () {

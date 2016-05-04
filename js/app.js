@@ -375,6 +375,7 @@ module.service('getKanbanData', ['$q', 'Api', function ($q, ApiKanban) {
     return function () {
         return new $q(function (resolve, reject) {
             ApiKanban.getBoards(function (boards) {
+                console.log(boards);
                 ApiKanban.getBoardSettings(boards[44].id, function (boardSettings) {
                     ApiKanban.getTasks(boards[44].id, function (tasks) {
                         resolve({'boards': boards, 'boardSettings': boardSettings, 'tasks': tasks});

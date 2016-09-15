@@ -9,6 +9,7 @@ module.controller('appController',
             $scope.result = [];
             $scope.blockTasks = [];
             $scope.repair = [];
+            $scope.incident = [];
             $scope.stages = [];
             $scope.data = [];
 
@@ -110,7 +111,6 @@ module.controller('appController',
                             (workflowStage.name != 'Finalizados da Semana' && workflowStage.name != 'Finalizado')) {
                             angular.forEach(analise, function (item) {
                                 ApiKanban.createTaskSubtask(task.board_id, task.id, item, function (data) {
-                                    console.log(data);
                                 });
                             });
                         }
@@ -133,6 +133,7 @@ module.controller('appController',
                 $scope.result = [];
                 $scope.blockTasks = [];
                 $scope.repair = [];
+                $scope.incident = [];
                 getKanbanData().then(function (data) {
                     $scope.colunmBoards(data.boardSettings.workflow_stages);
                     var swimlanes = $scope.form.swimlane ? [$scope.form.swimlane] : data.boardSettings.swimlanes;
@@ -143,6 +144,7 @@ module.controller('appController',
                         var tasks = [];
                         var block = [];
                         var repair = [];
+                        var incident = [];
                         var completeTask = [[], [], [], [], [],[],[]];
                         if (data.tasks.length > 0) {
                             angular.forEach(data.tasks, function (task) {
@@ -172,23 +174,27 @@ module.controller('appController',
                                     result.updated_at = task.updated_at;
                                     result.name = task.name;
 
-                                    if ((task.swimlane_id == swimlane.id) && (moment(timestampDueDate).isoWeek() == moment(now.getTime()).isoWeek()) &&
-                                        (result.typeCard.name == "Normal" || result.typeCard.name == "Corrigir" || result.typeCard.name == "Impedimento")) {
+                                    if ((task.swimlane_id == swimlane.id) && (moment(timestampDueDate).isoWeek() == moment(now.getTime()).isoWeek())) {
+                                         /** &&(result.typeCard.name == "Normal" || result.typeCard.name == "Corrigir" || result.typeCard.name == "Impedimento")*/
 
                                         $scope.stagesCount(result);
 
-                                        if (result.workflowStage.name == 'Finalizados da Semana') {
+                                        if (result.workflowStage.name == 'Finalizados da Semana' && result.typeCard.name != "Ajustes de revisão") {
                                             var date = moment(result.updated_at);
                                             completeTask[date.isoWeekday() - 1].push(result);
                                         }
 
                                         if (result.workflowStage.name != 'Backlog Mês'
-                                            && result.workflowStage.name != 'Finalizado') {
+                                            && result.workflowStage.name != 'Finalizado' && result.typeCard.name != "Ajustes de revisão") {
                                             tasks.push(result);
                                         }
 
-                                        if (result.typeCard.name == "Corrigir") {
+                                        if (result.typeCard.name == "Ajustes de revisão") {
                                             repair.push(result);
+                                        }
+
+                                        if (result.typeCard.name == "Incidente") {
+                                            incident.push(result);
                                         }
                                     }
 
@@ -204,15 +210,21 @@ module.controller('appController',
                                         block.push(taskBlock);
                                     }
                                 }
-                            }, tasks, completeTask, block, repair);
+                            }, tasks, completeTask, block, repair, incident);
                         }
                         result.completeTask = completeTask;
                         result.tasks = tasks;
                         result.repair = repair.length;
+                        result.incident = incident.length;
                         result.block = block.length;
                         if(repair.length > 0){
                             angular.forEach(repair, function (item) {
                                 $scope.repair.push(item);
+                            });
+                        }
+                        if(incident.length > 0){
+                            angular.forEach(incident, function (item) {
+                                $scope.incident.push(item);
                             });
                         }
                         $scope.swimlane = data.boardSettings.swimlanes;
@@ -375,8 +387,8 @@ module.service('getKanbanData', ['$q', 'Api', function ($q, ApiKanban) {
     return function () {
         return new $q(function (resolve, reject) {
             ApiKanban.getBoards(function (boards) {
-                ApiKanban.getBoardSettings(boards[44].id, function (boardSettings) {
-                    ApiKanban.getTasks(boards[44].id, function (tasks) {
+                ApiKanban.getBoardSettings(boards[41].id, function (boardSettings) {
+                    ApiKanban.getTasks(boards[41].id, function (tasks) {
                         resolve({'boards': boards, 'boardSettings': boardSettings, 'tasks': tasks});
                     });
                 })

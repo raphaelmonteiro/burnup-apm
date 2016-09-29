@@ -387,10 +387,14 @@ module.service('getKanbanData', ['$q', 'Api', function ($q, ApiKanban) {
     return function () {
         return new $q(function (resolve, reject) {
             ApiKanban.getBoards(function (boards) {
-                ApiKanban.getBoardSettings(boards[41].id, function (boardSettings) {
-                    ApiKanban.getTasks(boards[41].id, function (tasks) {
-                        resolve({'boards': boards, 'boardSettings': boardSettings, 'tasks': tasks});
-                    });
+                angular.forEach(boards, function(board, index) {
+                    if(board.name == "Equipe Técnica / MS"){
+                        ApiKanban.getBoardSettings(boards[index].id, function (boardSettings) {
+                            ApiKanban.getTasks(boards[index].id, function (tasks) {
+                                resolve({'boards': boards, 'boardSettings': boardSettings, 'tasks': tasks});
+                            });
+                        })
+                    }
                 })
             });
         });
